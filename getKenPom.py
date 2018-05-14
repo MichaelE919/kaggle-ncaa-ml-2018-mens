@@ -23,6 +23,8 @@ def swap(old_team, new_team):
     n.insert(i, new_team)
 
 
+print('Creating csv files for each year...')
+
 csv_list = []
 for year in range(2003, 2019):
     kp_page = requests.get(base_url + str(year))
@@ -298,6 +300,9 @@ for year in range(2003, 2019):
     df_kp.columns = columns
     df_kp.to_csv('KenPom_' + str(year) + '.csv', index=False)
     csv_list.append('KenPom_' + str(year) + '.csv')
+    print('KenPom_' + str(year) + '.csv')
+
+print('Combining yearly data into single csv file...')
 
 # kp_2002 = pd.read_csv('KenPom_2002.csv')
 kp_2003 = pd.read_csv('KenPom_2003.csv')

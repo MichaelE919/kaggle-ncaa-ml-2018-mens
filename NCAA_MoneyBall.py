@@ -17,9 +17,9 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.tree import DecisionTreeClassifier
 
-import matplotlib.pyplot as plt
-import seaborn as sns
 from xgboost.sklearn import XGBClassifier
+
+print('Loading data...')
 
 df_tourney = pd.read_csv('DataFiles/NCAATourneyCompactResults.csv')
 df_season = pd.read_csv('DataFiles/RegularSeasonDetailedResults.csv')
@@ -31,6 +31,8 @@ df_sample_sub = pd.read_csv('DataFiles/SampleSubmissionStage2.csv')
 
 df_kenpom['TeamID'] = df_kenpom['TeamName'].apply(
     lambda x: df_teams[df_teams['TeamName'] == x].values[0][0])
+
+print('Creating helper columns...')
 
 wPos = df_season.apply(
     lambda row: 0.96 * (row.WFGA + row.WTO + 0.44 * row.WFTA - row.WOR),
@@ -57,6 +59,10 @@ df_season['LPIE'] = lPIE / (wPIE + lPIE)
 
 # Effective Field Goal Percentage =
 # (Field Goals Made + 0.5*3P Field Goals Made) / Field Goal Attempts
+
+print('Creating columns for the Four Factors...')
+print('\tEffective Field Goal Percentage')
+
 df_season['WeFGP'] = df_season.apply(
     lambda row: (row.WFGM + 0.5 * row.WFGM3) / row.WFGA, axis=1)
 df_season['LeFGP'] = df_season.apply(
@@ -64,6 +70,7 @@ df_season['LeFGP'] = df_season.apply(
 
 # Turnover Rate =
 # Turnovers/(Field Goal Attempts + 0.44*Free Throw Attempts + Turnovers)
+print('\tTurnover Rate')
 df_season['WToR'] = df_season.apply(
     lambda row: row.WTO / (row.WFGA + 0.44 * row.WFTA + row.WTO), axis=1)
 df_season['LToR'] = df_season.apply(
@@ -71,6 +78,7 @@ df_season['LToR'] = df_season.apply(
 
 # Offensive Rebounding Percentage =
 # Offensive Rebounds / (Offensive Rebounds + Opponent’s Defensive Rebounds)
+print('\tOffensive Rebounding Percentage')
 df_season['WORP'] = df_season.apply(
     lambda row: row.WOR / (row.WOR + row.LDR), axis=1)
 df_season['LORP'] = df_season.apply(
@@ -78,6 +86,7 @@ df_season['LORP'] = df_season.apply(
 
 # Free Throw Rate =
 # Free Throws Attempted / Field Goals Attempted
+print('\tFree Throw Rate')
 df_season['WFTR'] = df_season.apply(lambda row: row.WFTA / row.WFGA, axis=1)
 df_season['LFTR'] = df_season.apply(lambda row: row.LFTA / row.LFGA, axis=1)
 
@@ -87,6 +96,7 @@ df_season['LFTR'] = df_season.apply(lambda row: row.LFTA / row.LFGA, axis=1)
 # 3. Rebounding (20%)
 # 4. Free Throws (15%)
 
+print('Adding weights to the Four Factors...')
 df_season['W4Factor'] = df_season.apply(
     lambda row: 0.4 * row.WeFGP + 0.25 * row.WToR + 0.2 * row.WORP + 0.15 *
     row.WFTR,
@@ -130,38 +140,48 @@ def getAdjEM(Year, TeamID):
     return AdjEM
 
 
+print('Creating Adjusted Efficiency columns...')
+
 # Adjusted Offensive Efficiency
+print('\tOffensive')
 df_season['WAdjO'] = df_season.apply(
     lambda row: getAdjO(row['Season'], row['WTeamID']), axis=1)
 df_season['LAdjO'] = df_season.apply(
     lambda row: getAdjO(row['Season'], row['LTeamID']), axis=1)
 
 # Adjusted Defensive Efficiency
+print('\tDefensive')
 df_season['WAdjD'] = df_season.apply(
     lambda row: getAdjD(row['Season'], row['WTeamID']), axis=1)
 df_season['LAdjD'] = df_season.apply(
     lambda row: getAdjD(row['Season'], row['LTeamID']), axis=1)
 
 # Adjusted Efficiency Margin
+print('\tMargin')
 df_season['WAdjEM'] = df_season.apply(
     lambda row: getAdjEM(row['Season'], row['WTeamID']), axis=1)
 df_season['LAdjEM'] = df_season.apply(
     lambda row: getAdjEM(row['Season'], row['LTeamID']), axis=1)
 
+print('Creating remaining columns:')
+
 # Defensive Rebounding Percentage =
 # Defensive Rebounds / (Defensive Rebounds + Opponents Offensive Rebounds)
+print('\tDefensive Rebounding Percentage')
 df_season['WDRP'] = df_season.apply(
     lambda row: row.WDR / (row.WDR + row.LOR), axis=1)
 df_season['LDRP'] = df_season.apply(
     lambda row: row.LDR / (row.LDR + row.WOR), axis=1)
 
 # Offensive Rebound to Turnover Margin
+print('\tOffensive Rebound to Turnover Margin')
 df_season['WORTM'] = df_season.apply(lambda row: row.WOR - row.WTO, axis=1)
 df_season['LORTM'] = df_season.apply(lambda row: row.LOR - row.LTO, axis=1)
 
 # Assist Ratio =
 # Assists/ (Field Goal Attempts + Free Throw Attempts*0.44 + Assists +
 # Turnovers)
+print('\tAssist Ratio')
 df_season['WAR'] = df_season.apply(
     lambda row: row.WAst / (row.WFGA + row.WFTA * 0.44 + row.WAst + row.WTO),
     axis=1)
@@ -170,12 +190,14 @@ df_season['LAR'] = df_season.apply(
     axis=1)
 
 # Free Throw Percentage
+print('\tFree Throw Percentage')
 df_season['WFTP'] = df_season.apply(
     lambda row: 0.0 if row.WFTA == 0 else row.WFTM / row.WFTA, axis=1)
 df_season['LFTP'] = df_season.apply(
     lambda row: 0.0 if row.LFTA == 0 else row.LFTM / row.LFTA, axis=1)
 
 # Score Differential = Points scored - points allowed
+print('\tScore Differential')
 df_season['WPtsDf'] = df_season.apply(
     lambda row: row.WScore - row.LScore, axis=1)
 df_season['LPtsDf'] = df_season.apply(
@@ -197,6 +219,8 @@ df_season.drop(
     inplace=True)
 
 df_season_totals = pd.DataFrame()
+
+print('Creating prediction dataset...')
 
 # Calculate wins and losses to get winning percentage
 df_season_totals['Wins'] = df_season['WTeamID'].groupby(
@@ -406,11 +430,6 @@ df_tourney_final = pd.merge(
     how='left',
     on=['Season', 'TeamID'])
 
-corrmatrix = df_tourney_final.iloc[:, 2:].corr()
-
-f, ax = plt.subplots(figsize=(20, 20))
-sns.heatmap(corrmatrix, vmax=0.8, annot=True, cbar=True, square=True)
-
 df_tourney.drop(
     labels=['DayNum', 'WScore', 'LScore', 'WLoc', 'NumOT'],
     inplace=True,
@@ -455,6 +474,8 @@ df_loss_diff = pd.merge(
 prediction_dataset = pd.concat((df_win_diff, df_loss_diff), axis=0)
 prediction_dataset.sort_values('Season', inplace=True)
 
+print('Separating dataset into features, labels, and IDs...')
+
 # For stage 1, label these as "labels", "features", and "ID's"
 y = prediction_dataset['result']
 X = prediction_dataset.loc[:, :'WinPCT']
@@ -475,9 +496,13 @@ train_IDs = prediction_dataset.loc[:, 'Season':]
 # X = prediction_dataset.iloc[:1426, :15]
 # train_IDs = prediction_dataset.iloc[:1426, 16:]
 
+print('Creating training and test sets...')
+
 # Split the 2003-2013 set even further
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, train_size=0.7, test_size=0.3, random_state=1, stratify=y)
+
+print('Creating classifier objects, parameter grids, and pipelines...')
 
 # Initiate classifiers
 clf1 = LogisticRegression()
@@ -532,6 +557,8 @@ pipe4 = Pipeline([('clf4', clf4)])
 pipe5 = Pipeline([('clf5', clf5)])
 
 pipe6 = Pipeline([('clf6', clf6)])
+
+print('Performing Grid Search Cross Validation...')
 
 # Set up GridSearchCV objects, one for each algorithm
 gridcvs = {}
@@ -717,6 +744,8 @@ clf = LogisticRegression(
 #     verbose=0,
 #     warm_start=False)
 
+print('Fitting data into classifier...')
+
 clf.fit(X, y)
 
 # Create data to input into the model
@@ -727,6 +756,8 @@ def get_year_t1_t2(ID):
     """Return a tuple with ints `year`, `team1` and `team2`."""
     return (int(x) for x in ID.split('_'))
 
+
+print('Creating submission file...')
 
 X_test = np.zeros(shape=(n_test_games, 1))
 columns = df_tourney_final.columns.get_values()
@@ -755,7 +786,7 @@ preds = clf.predict_proba(Predictions)[:, 1]
 
 df_sample_sub['Pred'] = preds
 
-# Generate prediction file
+# Generate submission file
 df_sample_sub.to_csv('Submissions/2018_predictions_lr.csv', index=False)
 # df_sample_sub.to_csv('Submissions/2018_predictions_knn.csv', index=False)
 # df_sample_sub.to_csv('Submissions/2018_predictions_xgb.csv', index=False)
@@ -766,12 +797,14 @@ df_sample_sub.to_csv('Submissions/2018_predictions_lr.csv', index=False)
 
 def build_team_dict():
     """Return a team ID map to build a readable prediction sheet."""
-    team_ids = pd.read_csv('Teams.csv')
+    team_ids = pd.read_csv('DataFiles/Teams.csv')
     team_id_map = {}
     for index, row in team_ids.iterrows():
         team_id_map[row['TeamID']] = row['TeamName']
     return team_id_map
 
+
+print('Creating predictions file...')
 
 team_id_map = build_team_dict()
 readable = []
