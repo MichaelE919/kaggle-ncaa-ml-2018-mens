@@ -18,6 +18,7 @@ This is the code I wrote and used to enter a submission into [Kaggle's 2018 Men'
 * [Adjusted Defensive Efficiency](https://cbbstatshelp.com/efficiency/adjusted-efficiency/)
 * [Adjusted Efficiency Margin](https://cbbstatshelp.com/ratings/adjem/)
 * [Defensive Rebounding Percentage](https://www.nbastuffer.com/analytics101/defensive-rebounding-percentage/)
+* Offensive Rebound to Turnover Margin
 * [Assist Ratio](https://www.nbastuffer.com/analytics101/assist-ratio/)
 * Free Throw Percentage
 * Score Differential
@@ -35,3 +36,7 @@ This is the code I wrote and used to enter a submission into [Kaggle's 2018 Men'
 * Use best performing classifer and fit with full training set
 * Create data to input into the model
 * Create predictions
+
+## Disclaimer
+The majority of the code in this repository was used to create the Kaggle submission; however, for my features, I used offensive and defensive efficiency numbers that were *not* adjusted for competition and I did not have the Offensive Rebound to Turnover Margin. While my models had a decent accuracy, they did a poor job of predicting upsets. After the competition closed and I watched more and more upsets that my models did not correctly predict, I replaced the offensive and defensive efficiency numbers with the adjusted versions from [kenpom.com](https://kenpom.com/) and added the offensive rebound to turnover margin, after some additional reading.
+Not only did I correctly "predict" some of the upsets, the accuracy of my models increased.
