@@ -1,0 +1,8 @@
+.vs/
+.vscode/
+NCAA_Moneyball_files/
+*.md
+!README.md
+*.png
+*-working.ipynb
+.ipynb_checkpoints/
