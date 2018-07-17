@@ -478,8 +478,8 @@ print('Separating dataset into features, labels, and IDs...')
 
 # For stage 1, label these as "labels", "features", and "ID's"
 y = prediction_dataset['result']
-X = prediction_dataset.loc[:, :'WinPCT']
-train_IDs = prediction_dataset.loc[:, 'Season':]
+X = prediction_dataset.loc[:, :'WinPCT'] # pylint: disable=E1127
+train_IDs = prediction_dataset.loc[:, 'Season':] # pylint: disable=E1127
 
 # Identify numerical key at bottom row of 2003-2013 set
 # len(prediction_dataset[prediction_dataset['Season'] < 2014])
@@ -799,7 +799,7 @@ def build_team_dict():
     """Return a team ID map to build a readable prediction sheet."""
     team_ids = pd.read_csv('DataFiles/Teams.csv')
     team_id_map = {}
-    for index, row in team_ids.iterrows():
+    for _, row in team_ids.iterrows():
         team_id_map[row['TeamID']] = row['TeamName']
     return team_id_map
 
