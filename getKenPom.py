@@ -34,7 +34,7 @@ for year in range(2003, 2019):
 
     td = soup.find_all('td')
     left = soup.find_all('td', {'class': 'td-left'})
-    names = soup.find_all('a', {'href': re.compile('team\.php\?team=.+')})
+    names = soup.find_all('a', {'href': re.compile(r'team\.php\?team=.+')})
     t = []
     s = []
     n = []
